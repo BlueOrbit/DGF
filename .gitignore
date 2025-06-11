@@ -48,6 +48,7 @@ codeql-queries/
 project/
 src/testdata/
 src/data/
+data/
 
 # llvm
 *.gcda
