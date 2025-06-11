@@ -7,6 +7,7 @@ class Runner:
     def run_binary(self, binary_path, timeout_sec=5):
         try:
             subprocess.run([binary_path], timeout=timeout_sec, check=True)
+            print(f"Successfully ran: {binary_path}")
             return True
         except subprocess.TimeoutExpired:
             print(f"Timeout running {binary_path}")

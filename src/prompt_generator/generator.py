@@ -14,6 +14,16 @@ def main(args):
         prompt = prompt_gen.generate_prompt(num_funcs=args.num_funcs)
         code = llm.generate_code(prompt)
 
+        # 找到code中的代码块
+        # 假设代码块以 ```c 开始，并以 ``` 结束
+        start = code.find("```c")
+        end = code.find("```", start + 4)
+        if start != -1 and end != -1:
+            code = code[start + 4:end].strip()
+        else:
+            print(f"Warning: No valid code block found in generated code for sample {i}. Using full code.")
+            code = code.strip()
+
         output_path = f"{args.output_dir}/fuzz_driver_{i}.c"
         with open(output_path, "w") as f:
             f.write(code)

@@ -59,3 +59,5 @@ src/test
 
 # other
 strcpy_call_chain.ql
+
+src/validator/validated

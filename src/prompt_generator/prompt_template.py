@@ -4,12 +4,13 @@ import random
 class PromptTemplate:
     def __init__(self, api_info_json):
         self.api_data = json.load(open(api_info_json))
-        self.system_includes = ["stdio.h", "stdlib.h", "string.h"]
+        self.system_includes = ["stdio.h", "stdlib.h", "string.h", "cJSON.h", "cJSON_Utils.h"]
 
     def get_api_signatures(self, num_funcs=5):
         functions = []
         for file_entry in self.api_data:
-            functions.extend(file_entry["result"]["functions"])
+            if file_entry.get("file") == "testdata/cJSON/cJSON.h":
+                functions.extend(file_entry["result"]["functions"])
         selected_funcs = random.sample(functions, min(num_funcs, len(functions)))
         return selected_funcs
 
