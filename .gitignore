@@ -1,0 +1,61 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.env
+.env
+.venv
+venv/
+ENV/
+env/
+*.egg-info/
+dist/
+build/
+
+# VS Code
+.vscode/
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+
+# Byte-compiled / optimized / DLL files
+*.pyc
+*.pyo
+*.pyd
+
+# Test results
+*.cover
+coverage.xml
+*.pytest_cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# MyPy
+.mypy_cache/
+.dmypy.json
+
+# codeql
+codeql/
+codeql-databases/
+codeql-queries/
+
+# test projects
+project/
+src/testdata/
+src/data/
+
+# llvm
+*.gcda
+*.gcno
+*.profdata
+*.profraw
+src/test_cov
+src/test
+
+# other
+strcpy_call_chain.ql
