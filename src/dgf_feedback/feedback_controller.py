@@ -38,7 +38,7 @@ class FeedbackController:
             with open(src_path, "w") as f:
                 f.write(code)
 
-            success, binary = self.validator.validate_source(src_path, include_dirs=["../testdata/cJSON"])
+            success, binary = self.validator.validate_source(src_path, include_dirs=["../../testdata/cJSON"])
             if not success:
                 continue
 

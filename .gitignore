@@ -49,6 +49,7 @@ project/
 src/testdata/
 src/data/
 data/
+testdata/
 
 # llvm
 *.gcda

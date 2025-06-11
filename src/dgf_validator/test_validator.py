@@ -8,7 +8,7 @@ runner = Runner()
 
 # LLM 生成输出目录
 fuzz_output_dir = "../data/fuzz_output_test"
-include_dirs = ["../testdata/cJSON", "/usr/include", "/usr/local/include"]
+include_dirs = ["../../testdata/cJSON", "/usr/include", "/usr/local/include"]
 
 for filename in os.listdir(fuzz_output_dir):
     if filename.endswith(".c"):
