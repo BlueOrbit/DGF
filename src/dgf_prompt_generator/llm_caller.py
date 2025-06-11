@@ -1,5 +1,5 @@
 import openai
-import config
+from dgf_prompt_generator import config
 
 class LLMCaller:
     def __init__(self):

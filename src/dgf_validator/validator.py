@@ -10,7 +10,7 @@ class Validator:
         # 补充通用库依赖
         self.extra_link_flags = [
             "-lm", "-lpthread", "-ldl",
-            "-L../../testdata/cJSON/build", "-lcjson"
+            "-L /home/lanjiachen/DGF/testdata/cJSON/build", "-lcjson"
         ]
 
         # 可选: future 可切换成 libFuzzer runtime支持

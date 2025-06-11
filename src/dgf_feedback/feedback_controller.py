@@ -1,11 +1,11 @@
 import os
-from prompt_template import PromptTemplate
-from llm_caller import LLMCaller
-from validator import Validator
-from runner import Runner
-from coverage_collector import CoverageCollector
-from sample_filter import SampleFilter
-from prompt_rewriter import PromptRewriter
+from dgf_prompt_generator.prompt_template import PromptTemplate
+from dgf_prompt_generator.llm_caller import LLMCaller
+from dgf_validator.validator import Validator
+from dgf_validator.runner import Runner
+from dgf_feedback.coverage_collector import CoverageCollector
+from dgf_feedback.sample_filter import SampleFilter
+from dgf_feedback.prompt_rewriter import PromptRewriter
 
 class FeedbackController:
     def __init__(self, api_json, output_dir):
@@ -38,7 +38,7 @@ class FeedbackController:
             with open(src_path, "w") as f:
                 f.write(code)
 
-            success, binary = self.validator.validate_source(src_path, include_dirs=["../../testdata/cJSON"])
+            success, binary = self.validator.validate_source(src_path, include_dirs=["../testdata/cJSON"])
             if not success:
                 continue
 

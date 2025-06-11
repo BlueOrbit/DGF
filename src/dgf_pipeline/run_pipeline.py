@@ -1,6 +1,6 @@
 import argparse
-from dgf_header_parser.extractor import Extractor
-from dgf_prompt_generator.generator import PromptGenerator
+# from dgf_header_parser.extractor import Extractor
+# from dgf_prompt_generator.generator import PromptGenerator
 from dgf_feedback.feedback_controller import FeedbackController
 
 if __name__ == "__main__":

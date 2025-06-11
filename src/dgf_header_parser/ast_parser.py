@@ -3,7 +3,7 @@
 import json
 import os
 
-import clang.cindex as cindex  # 这行关键
+import clang.cindex as cindex 
 
 # 配置 libclang 路径
 cindex.Config.set_library_file("/usr/lib/llvm-14/lib/libclang.so.1")

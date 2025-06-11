@@ -1,6 +1,6 @@
 import os
-from validator import Validator
-from runner import Runner
+from dgf_validator.validator import Validator
+from dgf_validator.runner import Runner
 
 # 初始化模块
 validator = Validator(clang_path="clang-14")
@@ -8,7 +8,7 @@ runner = Runner()
 
 # LLM 生成输出目录
 fuzz_output_dir = "../data/fuzz_output_test"
-include_dirs = ["../../testdata/cJSON", "/usr/include", "/usr/local/include"]
+include_dirs = ["../testdata/cJSON", "/usr/include", "/usr/local/include"]
 
 for filename in os.listdir(fuzz_output_dir):
     if filename.endswith(".c"):

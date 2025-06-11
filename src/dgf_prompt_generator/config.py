@@ -1,7 +1,7 @@
 # config.py
 
 # 你的 DeepSeek 或 OpenAI API Key
-API_KEY = "sk-xxx"
+API_KEY = "sk-daa57d4ed1104a05a32a0d3a8eff080b"
 
 # DeepSeek 兼容API地址（若用OpenAI官方API则改为 https://api.openai.com/v1）
 API_BASE_URL = "https://api.deepseek.com/v1"

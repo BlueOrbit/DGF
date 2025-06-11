@@ -1,6 +1,6 @@
 import argparse
-from prompt_template import PromptTemplate
-from llm_caller import LLMCaller
+from dgf_prompt_generator.prompt_template import PromptTemplate
+from dgf_prompt_generator.llm_caller import LLMCaller
 from tqdm import tqdm
 import os
 

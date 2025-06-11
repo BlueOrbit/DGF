@@ -1,7 +1,7 @@
 import argparse
 import json
-from header_scanner import collect_header_files
-from ast_parser import ASTParser
+from dgf_header_parser.header_scanner import collect_header_files
+from dgf_header_parser.ast_parser import ASTParser
 from tqdm import tqdm
 
 def extract_all_api(header_dir, include_dirs):

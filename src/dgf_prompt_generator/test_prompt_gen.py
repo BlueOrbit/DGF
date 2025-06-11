@@ -1,6 +1,6 @@
-import config
-from prompt_template import PromptTemplate
-from llm_caller import LLMCaller
+from dgf_prompt_generator import config
+from dgf_prompt_generator.prompt_template import PromptTemplate
+from dgf_prompt_generator.llm_caller import LLMCaller
 import time
 
 prompt_gen = PromptTemplate("/home/lanjiachen/DGF/src/data/cjson_extracted.json")
