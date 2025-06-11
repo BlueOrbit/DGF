@@ -23,4 +23,4 @@ export LIBCLANG_PATH="/usr/lib/llvm-14/lib/libclang.so.1"
 python3 header_parser/extractor.py \
     --header_dir testdata/cJSON \
     --include_dirs testdata/cJSON \
-    --output cjson_extracted.json
+    --output data/cjson_extracted.json
