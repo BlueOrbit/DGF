@@ -2,10 +2,13 @@ import argparse
 from prompt_template import PromptTemplate
 from llm_caller import LLMCaller
 from tqdm import tqdm
+import os
 
 def main(args):
     prompt_gen = PromptTemplate(args.api_json)
     llm = LLMCaller()
+
+    os.makedirs(args.output_dir, exist_ok=True)
 
     for i in tqdm(range(args.samples)):
         prompt = prompt_gen.generate_prompt(num_funcs=args.num_funcs)
