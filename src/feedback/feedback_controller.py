@@ -23,8 +23,16 @@ class FeedbackController:
         successful_samples = []
 
         for i in range(num_samples):
-            prompt = self.rewriter.rewrite_prompt(successful_samples)
+            prompt = self.rewriter.rewrite_prompt(len(successful_samples))
             code = self.llm.generate_code(prompt)
+
+            start = code.find("```c")
+            end = code.find("```", start + 4)
+            if start != -1 and end != -1:
+                code = code[start + 4:end].strip()
+            else:
+                print(f"Warning: No valid code block found in generated code for sample {i}. Using full code.")
+            code = code.strip()
 
             src_path = os.path.join(self.output_dir, f"fuzz_driver_{i}.c")
             with open(src_path, "w") as f:
@@ -34,17 +42,16 @@ class FeedbackController:
             if not success:
                 continue
 
-            # Set LLVM_PROFILE_FILE for coverage collection
             work_dir = os.path.dirname(binary)
             os.environ["LLVM_PROFILE_FILE"] = os.path.join(work_dir, "default.profraw")
 
             if not self.runner.run_binary(binary):
                 continue
 
-            coverage_json = self.cov_collector.collect_coverage(binary, work_dir)
-            coverage_value = self.cov_collector.parse_coverage(coverage_json)
+            cov_result = self.cov_collector.collect_and_analyze(binary, work_dir)
+            print(f"Coverage result: {cov_result}")
 
-            if self.sample_filter.filter_sample(coverage_value):
+            if self.sample_filter.filter_sample(cov_result):
                 successful_samples.append(code)
 
         return successful_samples

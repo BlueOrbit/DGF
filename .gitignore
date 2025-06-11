@@ -61,3 +61,4 @@ src/test
 strcpy_call_chain.ql
 
 src/validator/validated
+src/feedback/validated

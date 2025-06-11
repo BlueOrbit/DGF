@@ -4,7 +4,7 @@ import random
 class PromptTemplate:
     def __init__(self, api_info_json):
         self.api_data = json.load(open(api_info_json))
-        self.system_includes = ["stdio.h", "stdlib.h", "string.h", "cJSON.h", "cJSON_Utils.h"]
+        self.system_includes = ["stdint.h","stddef.h","stdio.h", "stdlib.h", "string.h", "cJSON.h", "cJSON_Utils.h"]
 
     def get_api_signatures(self, num_funcs=5):
         functions = []
@@ -24,6 +24,7 @@ class PromptTemplate:
 
         prompt = f"""You are generating a fuzz driver using LLVMFuzzerTestOneInput function.
 
+Always include:
 {includes}
 
 {func_signatures}
