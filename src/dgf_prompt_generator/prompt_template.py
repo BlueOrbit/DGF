@@ -1,5 +1,6 @@
 import json
 import random
+from class_chain import CallChainAnalyzer
 
 class PromptTemplate:
     def __init__(self, api_info_json):
@@ -21,7 +22,6 @@ class PromptTemplate:
         func_signatures = "\n".join(
             [self.format_func_signature(func) for func in selected_funcs]
         )
-
         prompt = f"""You are generating a fuzz driver using LLVMFuzzerTestOneInput function.
 
 Always include:
@@ -58,12 +58,22 @@ void LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {{
         includes = "\n".join([f"#include <{hdr}>" for hdr in self.system_includes])
         func_signatures = "\n".join([self.format_func_signature(func) for func in selected_funcs])
 
+        analyzer = CallChainAnalyzer()
+        chain_texts = []
+        for name in api_names:
+            chain_text = analyzer.get_call_chains_for_function(name)
+            chain_texts.append(f"/* Reverse call chains for {name}:\n{chain_text}\n*/")
+        
         prompt = f"""You are generating a fuzz driver using LLVMFuzzerTestOneInput function.
 
 Always include:
 {includes}
 
 {func_signatures}
+
+These are *reverse call chains*, showing which functions call the target API. 
+This information may help you synthesize realistic usage patterns in your fuzz driver.
+{callchain_section}
 
 Please implement the LLVMFuzzerTestOneInput function that uses these APIs.
 
