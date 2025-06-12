@@ -70,3 +70,6 @@ src/dgf_feedback/validated
 src/dgf_prompt_generator/config.py
 
 src/validated
+
+crash-*
+*.out

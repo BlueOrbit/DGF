@@ -18,8 +18,12 @@ class PromptTemplate:
     def get_all_api_names(self):
         functions = []
         for file_entry in self.api_data:
-            functions.extend([f["name"] for f in file_entry["result"]["functions"]])
+            for f in file_entry["result"]["functions"]:
+                # 只保留库函数（如函数名前缀筛选）
+                if f["name"].startswith("cJSON"):  
+                    functions.append(f["name"])
         return functions
+
 
     def generate_prompt(self, num_funcs=5):
         selected_funcs = self.get_api_signatures(num_funcs)

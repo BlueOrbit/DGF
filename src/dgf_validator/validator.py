@@ -11,6 +11,7 @@ class Validator:
         self.extra_link_flags = [
             "-lm", "-lpthread", "-ldl",
             "-L/home/lanjiachen/DGF/testdata/cJSON/build",
+            "-Wl,-rpath,/home/lanjiachen/DGF/testdata/cJSON/build",
             "-lcjson", "-lcjson_utils"
         ]
 

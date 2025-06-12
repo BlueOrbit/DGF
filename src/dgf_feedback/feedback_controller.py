@@ -64,7 +64,8 @@ class FeedbackController:
                 continue
 
             # 分支覆盖收集
-            func_cov_result = self.cov_collector.collect_branch_coverage(binary, work_dir)
+            func_cov_result, overall_coverage = self.cov_collector.collect_branch_coverage(binary, work_dir)
+            print(f"Overall branch coverage for this driver: {overall_coverage:.2%}")
 
             # 使用 API级别 SampleFilter
             if not self.sample_filter.filter_sample(mutated_apis, func_cov_result):

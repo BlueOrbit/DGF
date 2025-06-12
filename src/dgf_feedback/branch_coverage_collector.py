@@ -37,4 +37,17 @@ class BranchCoverageCollector:
                 cov_ratio = covered_branches / total_branches if total_branches > 0 else 0.0
                 func_coverage[name] = cov_ratio
 
-        return func_coverage
+        total_branches_all = 0
+        covered_branches_all = 0
+
+        for file_data in output.get("data", []):
+            for func in file_data.get("functions", []):
+                branches = func.get("branches", [])
+                total_branches_all += len(branches)
+                covered_branches_all += sum(1 for b in branches if b.get("count", 0) > 0)
+
+        overall_coverage = covered_branches_all / total_branches_all if total_branches_all > 0 else 0.0
+
+        # 可直接return两个指标
+        return func_coverage, overall_coverage
+

@@ -21,9 +21,9 @@ class FuzzerRunner:
         ]
 
         print("Launching libFuzzer run:", " ".join(cmd))
-
+        env = os.environ.copy()
         try:
-            subprocess.run(cmd, timeout=self.timeout_sec + 5, check=True)
+            subprocess.run(cmd, timeout=self.timeout_sec + 5, check=True, env=env)
             return True
         except subprocess.TimeoutExpired:
             print(f"Fuzzing timeout for {binary_path}")

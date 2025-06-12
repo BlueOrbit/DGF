@@ -68,6 +68,8 @@ def run_feedback_loop(config):
     lib_dir = config['validator']['lib_dir']
     libs = config['validator']['libs']
 
+    print(f"[*] 开始反馈循环，输出目录: {output_dir}")
+
     fc = FeedbackController(
         api_json=api_json,
         output_dir=output_dir,
@@ -76,7 +78,9 @@ def run_feedback_loop(config):
         lib_dir=lib_dir,
         libs=libs
     )
+    print("[*] 初始化 FeedbackController 完成")
     fc.run_iteration(num_samples=samples_per_round)
+    print("[*] 反馈循环完成")
 
 def main():
     parser = argparse.ArgumentParser()
