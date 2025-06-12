@@ -1,6 +1,7 @@
 import json
 import random
 from dgf_header_parser.constraint_inferencer import ConstraintInferencer
+from dgf_prompt_generator.class_chain import CallChainAnalyzer
 
 class PromptTemplate:
     def __init__(self, api_info_json):
@@ -33,7 +34,7 @@ class PromptTemplate:
         selected_funcs = [func for func in all_funcs if func["name"] in api_names]
         return self._generate_prompt_from_funcs(selected_funcs, api_names)
 
-    def _generate_prompt_from_funcs(self, selected_funcs, api_names):
+    def _generate_prompt_from_funcs(self, selected_funcs, api_names = None):
         includes = "\n".join([f"#include <{hdr}>" for hdr in self.system_includes])
         func_signatures = "\n".join(
             [self.format_func_signature(func) for func in selected_funcs]
@@ -41,9 +42,14 @@ class PromptTemplate:
 
         analyzer = CallChainAnalyzer()
         chain_texts = []
+        if api_names == None:
+            api_names = [f["name"] for f in selected_funcs]
+
         for name in api_names:
             chain_text = analyzer.get_call_chains_for_function(name)
             chain_texts.append(f"/* Reverse call chains for {name}:\n{chain_text}\n*/")
+
+        callchain_section = "\n".join(chain_texts)
 
         prompt = f"""You are generating a fuzz driver using LLVMFuzzerTestOneInput function.
 

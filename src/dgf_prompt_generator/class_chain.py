@@ -69,8 +69,3 @@ class CallChainAnalyzer:
             result.append("")  # 空行分隔
 
         return "\n".join(result)
-
-
-analyzer = CallChainAnalyzer()
-prompt_text = analyzer.get_call_chains_for_function("malloc")
-print(prompt_text)
