@@ -6,7 +6,7 @@ api_extraction:
 
 prompt_generation:
   output_dir: /home/lanjiachen/DGF/src/data/seed_prompts
-  samples: 10
+  samples: 2
   num_funcs: 5
 
 feedback_iteration:

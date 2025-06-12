@@ -1,5 +1,6 @@
 import subprocess
 import os
+import re
 
 class Validator:
     def __init__(self, clang_path="clang-14", work_dir="./validated"):
@@ -7,44 +8,46 @@ class Validator:
         self.work_dir = work_dir
         os.makedirs(work_dir, exist_ok=True)
 
-        # 补充通用库依赖
         self.extra_link_flags = [
             "-lm", "-lpthread", "-ldl",
-            "-L/home/lanjiachen/DGF/testdata/cJSON/build", 
-            "-lcjson",
-            "-lcjson_utils"
+            "-L/home/lanjiachen/DGF/testdata/cJSON/build",
+            "-lcjson", "-lcjson_utils"
         ]
 
-        #  future 切换成 libFuzzer runtime支持
         self.fuzzer_flags = [
             "-fsanitize=fuzzer,address,undefined",
             "-fno-sanitize-recover=all",
             "-O0", "-g"
         ]
 
-    def validate_source(self, src_file, include_dirs=[]):
+    def validate_source(self, src_file, include_dirs=[], max_retry=3):
         output_binary = os.path.join(self.work_dir, os.path.basename(src_file).replace(".c", ""))
 
-        compile_cmd = [self.clang] + self.fuzzer_flags
+        for attempt in range(max_retry):
+            compile_cmd = [self.clang] + self.fuzzer_flags + [src_file]
+            for inc in include_dirs:
+                compile_cmd.extend(["-I", inc])
+            compile_cmd.extend(self.extra_link_flags)
+            compile_cmd.extend(["-o", output_binary])
 
-        # 源文件
-        compile_cmd.append(src_file)
+            print(f"Compiling (attempt {attempt+1}):", " ".join(compile_cmd))
 
-        # 头文件目录
-        for inc in include_dirs:
-            compile_cmd.extend(["-I", inc])
+            try:
+                subprocess.run(compile_cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                return True, output_binary
+            except subprocess.CalledProcessError as e:
+                stderr_output = e.stderr.decode()
+                print(f"Compilation failed (attempt {attempt+1}):\n{stderr_output}")
 
-        # 链接库
-        compile_cmd.extend(self.extra_link_flags)
+                # 检测 undefined reference to `__xxx`
+                undefined_refs = re.findall(r"undefined reference to `(__[a-zA-Z0-9_]+)`", stderr_output)
+                if undefined_refs and attempt + 1 < max_retry:
+                    # 尝试自动修复，追加 -lm
+                    print("Detected undefined internal reference(s):", undefined_refs)
+                    self.extra_link_flags.append("-lm")
+                    print("AutoFixer: Retrying compilation with additional -lm")
+                    continue
+                else:
+                    return False, None
 
-        # 输出文件
-        compile_cmd.extend(["-o", output_binary])
-
-        print("Compiling:", " ".join(compile_cmd))
-
-        try:
-            subprocess.run(compile_cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            return True, output_binary
-        except subprocess.CalledProcessError as e:
-            print(f"Compilation failed for {src_file}:\n{e.stderr.decode()}")
-            return False, None
+        return False, None

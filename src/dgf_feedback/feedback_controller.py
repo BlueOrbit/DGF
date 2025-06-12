@@ -9,7 +9,7 @@ from dgf_feedback.branch_coverage_collector import BranchCoverageCollector
 from dgf_feedback.sample_filter import SampleFilter
 
 class FeedbackController:
-    def __init__(self, api_json, output_dir):
+    def __init__(self, api_json, output_dir, clang_path="clang-14", include_dirs=[], lib_dir=None, libs=[]):
         self.prompt_template = PromptTemplate(api_json)
         self.llm = LLMCaller()
         self.validator = Validator(clang_path="clang-14")
