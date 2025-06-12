@@ -3,13 +3,10 @@ from dgf_prompt_generator.prompt_template import PromptTemplate
 from dgf_prompt_generator.llm_caller import LLMCaller
 from dgf_validator.validator import Validator
 from dgf_validator.fuzzer_runner import FuzzerRunner
-from dgf_feedback.coverage_collector import CoverageCollector
-from dgf_feedback.sample_filter import SampleFilter
-
 from dgf_feedback.api_manager import APIManager
 from dgf_feedback.prompt_mutator import PromptMutator
-
-import random
+from dgf_feedback.branch_coverage_collector import BranchCoverageCollector
+from dgf_feedback.sample_filter import SampleFilter
 
 class FeedbackController:
     def __init__(self, api_json, output_dir):
@@ -17,8 +14,8 @@ class FeedbackController:
         self.llm = LLMCaller()
         self.validator = Validator(clang_path="clang-14")
         self.fuzzer = FuzzerRunner(timeout_sec=20)
-        self.cov_collector = CoverageCollector()
-        self.sample_filter = SampleFilter()
+        self.cov_collector = BranchCoverageCollector()
+        self.sample_filter = SampleFilter(min_api_coverage=0.2, min_success_ratio=0.5)
         self.output_dir = output_dir
         os.makedirs(output_dir, exist_ok=True)
 
@@ -56,7 +53,6 @@ class FeedbackController:
             with open(src_path, "w") as f:
                 f.write(code)
 
-            # 验证编译
             success, binary = self.validator.validate_source(src_path, include_dirs=["../testdata/cJSON"])
             if not success:
                 continue
@@ -67,17 +63,20 @@ class FeedbackController:
             if not self.fuzzer.run_libfuzzer(binary, work_dir):
                 continue
 
-            cov_result = self.cov_collector.collect_and_analyze(binary, work_dir)
-            print(f"Coverage result: {cov_result}")
+            # 分支覆盖收集
+            func_cov_result = self.cov_collector.collect_branch_coverage(binary, work_dir)
 
-            # 覆盖率反馈更新
-            func_cov_result = self.cov_collector.collect_function_coverage(binary, work_dir)
+            # 使用 API级别 SampleFilter
+            if not self.sample_filter.filter_sample(mutated_apis, func_cov_result):
+                continue
+
+            # 更新 API 反馈
             for api in mutated_apis:
+                self.api_manager.update_seed(api)
                 if api in func_cov_result:
                     self.api_manager.update_coverage(api, func_cov_result[api])
 
-            if not self.sample_filter.filter_sample(mutated_apis, func_cov_result):
-                continue
+            successful_samples.append(code)
 
         self.api_manager.print_state()
         return successful_samples, history_api_combos
