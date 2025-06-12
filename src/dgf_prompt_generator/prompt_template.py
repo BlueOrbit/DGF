@@ -1,7 +1,6 @@
 import json
 import random
 from dgf_header_parser.constraint_inferencer import ConstraintInferencer
-from dgf_prompt_generator.class_chain import CallChainAnalyzer
 
 class PromptTemplate:
     def __init__(self, api_info_json):
@@ -32,24 +31,13 @@ class PromptTemplate:
             all_funcs.extend(file_entry["result"]["functions"])
 
         selected_funcs = [func for func in all_funcs if func["name"] in api_names]
-        return self._generate_prompt_from_funcs(selected_funcs, api_names)
+        return self._generate_prompt_from_funcs(selected_funcs)
 
-    def _generate_prompt_from_funcs(self, selected_funcs, api_names = None):
+    def _generate_prompt_from_funcs(self, selected_funcs):
         includes = "\n".join([f"#include <{hdr}>" for hdr in self.system_includes])
         func_signatures = "\n".join(
             [self.format_func_signature(func) for func in selected_funcs]
         )
-
-        analyzer = CallChainAnalyzer()
-        chain_texts = []
-        if api_names == None:
-            api_names = [f["name"] for f in selected_funcs]
-
-        for name in api_names:
-            chain_text = analyzer.get_call_chains_for_function(name)
-            chain_texts.append(f"/* Reverse call chains for {name}:\n{chain_text}\n*/")
-
-        callchain_section = "\n".join(chain_texts)
 
         prompt = f"""You are generating a fuzz driver using LLVMFuzzerTestOneInput function.
 
@@ -57,10 +45,6 @@ Always include:
 {includes}
 
 {func_signatures}
-
-These are *reverse call chains*, showing which functions call the target API. 
-This information may help you synthesize realistic usage patterns in your fuzz driver.
-{callchain_section}
 
 Please implement the LLVMFuzzerTestOneInput function that uses these APIs.
 
