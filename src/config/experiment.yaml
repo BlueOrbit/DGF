@@ -1,21 +1,22 @@
-
 api_extraction:
-  header_dir: /home/lanjiachen/DGF/testdata/cJSON/include
-  extracted_api_json: ./data/extracted_api.json
+  header_dir: /home/lanjiachen/DGF/testdata/cJSON
+  include_dirs:
+    - /home/lanjiachen/DGF/testdata/cJSON
+  extracted_api_json: /home/lanjiachen/DGF/src/data/extracted_api.json
 
 prompt_generation:
-  samples: 20
-  output_dir: ./data/fuzz_output_round1
+  output_dir: /home/lanjiachen/DGF/src/data/seed_prompts
+  samples: 10
+  num_funcs: 5
 
 feedback_iteration:
-  samples_per_round: 20
-  output_dir: ./data/fuzz_output_round1
-  include_dirs: /home/lanjiachen/DGF/testdata/cJSON
+  output_dir: /home/lanjiachen/DGF/src/data/feedback_results
+  samples_per_round: 10
 
 validator:
   clang_path: clang-14
   include_dirs:
-    - ../testdata/cJSON
+    - /home/lanjiachen/DGF/testdata/cJSON
   lib_dir: /home/lanjiachen/DGF/testdata/cJSON/build
   libs:
     - cjson
