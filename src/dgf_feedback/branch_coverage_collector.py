@@ -13,6 +13,10 @@ class BranchCoverageCollector:
         profraw = os.path.join(work_dir, "default.profraw")
         profdata_out = os.path.join(work_dir, "default.profdata")
 
+        if not os.path.exists(profraw):
+            print(f"Warning: Coverage profile file not found. Likely crash occurred.")
+            return {}, 0.0
+
         subprocess.run([self.profdata, "merge", "-sparse", profraw, "-o", profdata_out], check=True)
 
         export_cmd = [

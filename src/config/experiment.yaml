@@ -6,12 +6,12 @@ api_extraction:
 
 prompt_generation:
   output_dir: /home/lanjiachen/DGF/src/data/seed_prompts
-  samples: 1
+  samples: 2
   num_funcs: 5
 
 feedback_iteration:
   output_dir: /home/lanjiachen/DGF/src/data/feedback_results
-  samples_per_round: 1
+  samples_per_round: 2
 
 validator:
   clang_path: clang-14

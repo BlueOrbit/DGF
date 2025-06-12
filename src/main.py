@@ -50,7 +50,7 @@ def generate_seed_prompt(config):
         else:
             code = code.strip()
 
-        with open(os.path.join(output_dir, f"seed_driver_{i}.c"), "w") as f:
+        with open(os.path.join(output_dir, f"fuzz_driver_{i}.c"), "w") as f:
             f.write(code)
 
     print("[*] 种子Prompt生成完成")

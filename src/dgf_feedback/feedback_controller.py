@@ -66,6 +66,13 @@ class FeedbackController:
             # 分支覆盖收集
             func_cov_result, overall_coverage = self.cov_collector.collect_branch_coverage(binary, work_dir)
             print(f"Overall branch coverage for this driver: {overall_coverage:.2%}")
+            # 写入到文件
+            cov_file_path = os.path.join(self.output_dir, f"coverage_{i}.txt")
+            with open(cov_file_path, "w") as cov_file:
+                for api, coverage in func_cov_result.items():
+                    cov_file.write(f"{api}: {coverage:.2%}\n")
+                cov_file.write(f"Overall coverage: {overall_coverage:.2%}\n")
+                
 
             # 使用 API级别 SampleFilter
             if not self.sample_filter.filter_sample(mutated_apis, func_cov_result):
