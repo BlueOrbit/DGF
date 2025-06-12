@@ -15,7 +15,7 @@ class Validator:
             "-lcjson_utils"
         ]
 
-        # 可选: future 可切换成 libFuzzer runtime支持
+        #  future 切换成 libFuzzer runtime支持
         self.fuzzer_flags = [
             "-fsanitize=fuzzer,address,undefined",
             "-fno-sanitize-recover=all",
