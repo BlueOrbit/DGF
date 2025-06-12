@@ -1,0 +1,22 @@
+
+api_extraction:
+  header_dir: /home/lanjiachen/DGF/testdata/cJSON/include
+  extracted_api_json: ./data/extracted_api.json
+
+prompt_generation:
+  samples: 20
+  output_dir: ./data/fuzz_output_round1
+
+feedback_iteration:
+  samples_per_round: 20
+  output_dir: ./data/fuzz_output_round1
+  include_dirs: /home/lanjiachen/DGF/testdata/cJSON
+
+validator:
+  clang_path: clang-14
+  include_dirs:
+    - ../testdata/cJSON
+  lib_dir: /home/lanjiachen/DGF/testdata/cJSON/build
+  libs:
+    - cjson
+    - cjson_utils
