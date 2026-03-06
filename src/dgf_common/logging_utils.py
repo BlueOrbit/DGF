@@ -1,0 +1,12 @@
+import logging
+import os
+
+
+def configure_logging(default_level="INFO"):
+    level_name = os.getenv("DGF_LOG_LEVEL", default_level).upper()
+    level = getattr(logging, level_name, logging.INFO)
+
+    logging.basicConfig(
+        level=level,
+        format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
+    )

@@ -1,126 +1,112 @@
-# DGF: 基于Prompt的Fuzz Driver自生成系统
+# DGF: 基于 Prompt 的 Fuzz Driver 自动生成系统
 
-> 本项目是 PromptFuzz 论文《Prompt Fuzzing for Fuzz Driver Generation》 (CCS 2024) 的全面复现实现，并扩展了调用链分析技术，用于增强 LLM 生成合理 API 调用系列的能力。
+本项目实现了从头文件 API 抽取、Prompt 构造、LLM 代码生成、编译验证、fuzz 执行到覆盖率反馈迭代的完整流程。
 
----
+## 1. 模块流程
 
-## 一、项目概述
-
-DGF 自动生成高质量的 fuzz driver，进行应用程序库的默黑模糊测试，根据覆盖率反馈和程序验证进行迭代优化，复现 PromptFuzz 论文中的核心技术思路。
-
----
-
-## 二、系统模块构成
-
-```
-头文件 --> 头文解析 (Header Parser) --> API 签名
-      |
-      v
-  调用链分析 (Call Chain Analysis)
-      |
-      v
-Prompt 生成 (Prompt Generator) --> LLM 生成代码
-      |
-      v
-程序验证 (Validator)
-      |
-      v
-覆盖率收集 (Coverage Collector)
-      |
-      v
-Prompt 变异 (Prompt Mutation) <--- 反馈控制 (Feedback Controller)
+```text
+Header Parser -> Prompt Generator -> LLM Code -> Validator -> Fuzzer -> Coverage -> Feedback
 ```
 
----
+核心入口：`src/main.py`
 
-## 三、目录结构
+## 2. 目录结构
 
+```text
+.
+├── src/
+│   ├── main.py
+│   ├── config/experiment.yaml
+│   ├── dgf_header_parser/
+│   ├── dgf_prompt_generator/
+│   ├── dgf_validator/
+│   ├── dgf_feedback/
+│   ├── dgf_pipeline/
+│   └── dgf_common/
+├── tests/
+├── requirements.txt
+├── requirements-dev.txt
+└── pyproject.toml
 ```
-DGF-main/
-|
-├— src/
-|    ├— main.py               # 总控制入口
-|    ├— config/               # 配置文件
-|    ├— dgf_header_parser/   # 头文解析和API提取
-|    ├— dgf_prompt_generator/ # Prompt生成和LLM调用
-|    ├— dgf_validator/       # 程序验证模块
-|    ├— dgf_feedback/        # 反馈控制与覆盖率收集
-|    └— dgf_pipeline/        # 完整流水线执行控制
-|
-└— README.md
-```
 
----
+## 3. 环境要求
 
-## 四、快速使用
+- Python 3.9+
+- clang/llvm（建议 14+）
+- 支持 libFuzzer 的编译环境
 
-### 1.环境供与
+可选环境变量：
 
-- Python 3.8+
-- clang, llvm, lcov, cmake
-- 支持libFuzzer的编译环境
-- 安装Python依赖:
+- `OPENAI_API_KEY`（必需，除非使用本地 `src/dgf_prompt_generator/config.py`）
+- `OPENAI_BASE_URL`（可选）
+- `OPENAI_MODEL`（默认 `gpt-4.1-mini`）
+- `OPENAI_TEMPERATURE`（默认 `0.2`）
+- `LIBCLANG_PATH`（可选，如 `/usr/lib/llvm-14/lib/libclang.so.1`）
+
+## 4. 安装依赖
 
 ```bash
-python -m venv venv
-source venv/bin/activate
-pip install -r src/dgf_prompt_generator/requirements.txt
-pip install -r src/dgf_validator/requirements.txt
-pip install -r src/dgf_feedback/requirements.txt
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements-dev.txt
 ```
 
-### 2.目标库准备
+## 5. 目标库准备（以 cJSON 为例）
 
-将测试库的源码和头文件放入指定路径，如:
+将目标库放到：
 
+```text
+testdata/cJSON
 ```
-testdata/cJSON/
-```
 
-### 3.运行全流程
+并确保其可被 clang include/link（`src/config/experiment.yaml` 已给出默认路径模板）。
+
+## 6. 运行方式
+
+### 6.1 运行完整流程
 
 ```bash
-cd src/
-python main.py --config config/experiment.yaml
+PYTHONPATH=src python src/main.py --config src/config/experiment.yaml
 ```
 
-### 4.运行结果
+### 6.2 单独运行 feedback pipeline
 
-- 生成种子seed程序
-- 生成fuzz driver并执行libFuzzer测试
-- 生成覆盖率和bug报告
+```bash
+PYTHONPATH=src python src/dgf_pipeline/run_pipeline.py \
+  --api_json data/extracted_api.json \
+  --output_dir data/feedback_results \
+  --samples 5 \
+  --clang_path clang \
+  --include_dirs testdata/cJSON \
+  --lib_dir testdata/cJSON/build \
+  --libs cjson cjson_utils
+```
 
----
+## 7. 配置说明
 
-## 五、配置文件
+主配置：`src/config/experiment.yaml`
 
-根本配置文件位于 `config/experiment.yaml`，具体包括:
+- `api_extraction`：头文件扫描路径、include 路径、抽取 JSON 输出位置
+- `prompt_generation`：seed driver 数量、每个 driver 的 API 数、include 模板、API 前缀过滤
+- `feedback_iteration`：每轮样本数与 fuzz 超时
+- `validator`：clang 路径、include 路径、库目录与库名
 
-- `library_path`：库源码路径
-- `header_path`：头文件路径
-- `clang_bin`：clang编译器路径
-- `llm_provider`：设置LLM接口和API密钥
-- `mutation_params`：Prompt变异策略参数
+## 8. 开发与质量检查
 
----
+```bash
+ruff check src
+mypy src
+pytest
+```
 
-## 六、项目特性
+仓库已包含 GitHub Actions 工作流（`.github/workflows/ci.yml`）用于自动执行上述检查。
 
-- 完全复现 PromptFuzz 核心设计
-- 基于覆盖率的 Prompt 变异和能量调度
-- 多阶验证（编译+sanitizer+fuzzing）
-- 集成 AFLFast 风格的 API energy scheduling
-- 增强 **调用链分析** (扩展部分)
-- 支持可复现性实验
+## 9. 本地 LLM 配置（可选）
 
----
+如不想依赖环境变量，可复制：
 
-## 七、参考文献
+```text
+src/dgf_prompt_generator/config.example.py -> src/dgf_prompt_generator/config.py
+```
 
-- PromptFuzz: Prompt Fuzzing for Fuzz Driver Generation
-- CCS 2024, Yunlong Lyu et al.
-- 本实现在此基础上扩展了静态程序分析分支，增强了生成合理性
-
----
-
-
+并填写 API 配置。`config.py` 默认不提交到仓库。

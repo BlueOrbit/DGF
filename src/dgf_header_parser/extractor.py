@@ -1,13 +1,18 @@
 import argparse
 import json
-from dgf_header_parser.header_scanner import collect_header_files
-from dgf_header_parser.ast_parser import ASTParser
+import logging
+
 from tqdm import tqdm
+
+from dgf_header_parser.ast_parser import ASTParser
+from dgf_header_parser.header_scanner import collect_header_files
+
+LOGGER = logging.getLogger(__name__)
 
 def extract_all_api(header_dir, include_dirs):
     headers = collect_header_files(header_dir)
     parser = ASTParser(include_dirs)
-    
+
     all_results = []
     for h in tqdm(headers, desc="Parsing Headers"):
         try:
@@ -18,11 +23,12 @@ def extract_all_api(header_dir, include_dirs):
                 "result": result
             })
         except Exception as e:
-            print(f"Error parsing {h}: {e}")
+            LOGGER.warning("Error parsing %s: %s", h, e)
 
     return all_results
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s | %(message)s")
     parser = argparse.ArgumentParser()
     parser.add_argument("--header_dir", required=True, help="Path to library header files")
     parser.add_argument("--include_dirs", nargs='*', default=[], help="Additional include directories")
@@ -34,4 +40,4 @@ if __name__ == "__main__":
     with open(args.output, "w") as f:
         json.dump(results, f, indent=2)
 
-    print(f"Extraction completed, output saved to {args.output}")
+    LOGGER.info("Extraction completed, output saved to %s", args.output)

@@ -1,7 +1,10 @@
 # src/dgf_feedback/api_manager.py
 
+import logging
 import random
 from collections import defaultdict
+
+LOGGER = logging.getLogger(__name__)
 
 class APIManager:
     def __init__(self, api_list, exponent=1.0):
@@ -40,4 +43,11 @@ class APIManager:
 
     def print_state(self):
         for api in self.api_list:
-            print(f"{api}: cov={self.coverage[api]:.2f}, seed={self.seed_count[api]}, prompt={self.prompt_count[api]}, energy={self.get_energy(api):.4f}")
+            LOGGER.info(
+                "%s: cov=%.2f, seed=%d, prompt=%d, energy=%.4f",
+                api,
+                self.coverage[api],
+                self.seed_count[api],
+                self.prompt_count[api],
+                self.get_energy(api),
+            )

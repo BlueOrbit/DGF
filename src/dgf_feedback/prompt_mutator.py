@@ -2,6 +2,7 @@
 
 import random
 
+
 class PromptMutator:
     def __init__(self, api_manager):
         self.api_manager = api_manager

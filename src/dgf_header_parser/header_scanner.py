@@ -1,5 +1,6 @@
 import os
 
+
 def collect_header_files(root_dir):
     header_files = []
     for dirpath, _, filenames in os.walk(root_dir):

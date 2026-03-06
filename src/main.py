@@ -1,12 +1,18 @@
 import argparse
-import yaml
 import json
+import logging
 import os
 
-from dgf_header_parser.extractor import extract_all_api
-from dgf_prompt_generator.prompt_template import PromptTemplate
-from dgf_prompt_generator.llm_caller import LLMCaller
+import yaml
+
+from dgf_common.code_utils import extract_c_code_block
+from dgf_common.logging_utils import configure_logging
 from dgf_feedback.feedback_controller import FeedbackController
+from dgf_header_parser.extractor import extract_all_api
+from dgf_prompt_generator.llm_caller import LLMCaller
+from dgf_prompt_generator.prompt_template import PromptTemplate
+
+LOGGER = logging.getLogger(__name__)
 
 def extract_api(config):
     """
@@ -15,13 +21,15 @@ def extract_api(config):
     header_dir = config['api_extraction']['header_dir']
     include_dirs = config['api_extraction'].get('include_dirs', [])
 
-    print(f"[*] 开始抽取API信息 from {header_dir}")
+    LOGGER.info("开始抽取API信息: %s", header_dir)
     results = extract_all_api(header_dir, include_dirs)
 
     output_path = config['api_extraction']['extracted_api_json']
+    output_parent = os.path.dirname(output_path) or "."
+    os.makedirs(output_parent, exist_ok=True)
     with open(output_path, "w") as f:
         json.dump(results, f, indent=2)
-    print(f"[*] API信息保存至 {output_path}")
+    LOGGER.info("API信息保存至 %s", output_path)
 
 def generate_seed_prompt(config):
     """
@@ -31,29 +39,29 @@ def generate_seed_prompt(config):
     output_dir = config['prompt_generation']['output_dir']
     samples = config['prompt_generation'].get('samples', 5)
     num_funcs = config['prompt_generation'].get('num_funcs', 5)
+    system_includes = config['prompt_generation'].get('system_includes', [])
+    api_prefixes = config['prompt_generation'].get('api_prefixes', [])
 
     os.makedirs(output_dir, exist_ok=True)
 
-    prompt_template = PromptTemplate(api_json)
+    prompt_template = PromptTemplate(
+        api_json,
+        system_includes=system_includes,
+        api_prefixes=api_prefixes,
+    )
     llm = LLMCaller()
 
-    print(f"[*] 开始生成 {samples} 个种子 Prompt")
+    LOGGER.info("开始生成 %d 个种子 Prompt", samples)
 
     for i in range(samples):
         prompt = prompt_template.generate_prompt(num_funcs=num_funcs)
         code = llm.generate_code(prompt)
-
-        start = code.find("```c")
-        end = code.find("```", start + 4)
-        if start != -1 and end != -1:
-            code = code[start + 4:end].strip()
-        else:
-            code = code.strip()
+        code = extract_c_code_block(code)
 
         with open(os.path.join(output_dir, f"fuzz_driver_{i}.c"), "w") as f:
             f.write(code)
 
-    print("[*] 种子Prompt生成完成")
+    LOGGER.info("种子 Prompt 生成完成")
 
 def run_feedback_loop(config):
     """
@@ -62,13 +70,16 @@ def run_feedback_loop(config):
     api_json = config['api_extraction']['extracted_api_json']
     output_dir = config['feedback_iteration']['output_dir']
     samples_per_round = config['feedback_iteration']['samples_per_round']
+    system_includes = config['prompt_generation'].get('system_includes', [])
+    api_prefixes = config['prompt_generation'].get('api_prefixes', [])
+    fuzz_timeout_sec = config['feedback_iteration'].get('fuzz_timeout_sec', 20)
 
     clang_path = config['validator']['clang_path']
     include_dirs = config['validator']['include_dirs']
     lib_dir = config['validator']['lib_dir']
     libs = config['validator']['libs']
 
-    print(f"[*] 开始反馈循环，输出目录: {output_dir}")
+    LOGGER.info("开始反馈循环，输出目录: %s", output_dir)
 
     fc = FeedbackController(
         api_json=api_json,
@@ -76,13 +87,17 @@ def run_feedback_loop(config):
         clang_path=clang_path,
         include_dirs=include_dirs,
         lib_dir=lib_dir,
-        libs=libs
+        libs=libs,
+        system_includes=system_includes,
+        api_prefixes=api_prefixes,
+        fuzz_timeout_sec=fuzz_timeout_sec,
     )
-    print("[*] 初始化 FeedbackController 完成")
+    LOGGER.info("FeedbackController 初始化完成")
     fc.run_iteration(num_samples=samples_per_round)
-    print("[*] 反馈循环完成")
+    LOGGER.info("反馈循环完成")
 
 def main():
+    configure_logging()
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=str, required=True)
     args = parser.parse_args()

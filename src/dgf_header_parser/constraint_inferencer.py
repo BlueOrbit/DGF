@@ -1,7 +1,5 @@
 # src/dgf_header_parser/constraint_inferencer.py
 
-import re
-
 class ConstraintInferencer:
     def __init__(self, extracted_api_json):
         self.api_data = extracted_api_json

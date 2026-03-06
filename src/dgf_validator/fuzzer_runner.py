@@ -1,7 +1,10 @@
 # src/dgf_validator/fuzzer_runner.py
 
-import subprocess
+import logging
 import os
+import subprocess
+
+LOGGER = logging.getLogger(__name__)
 
 class FuzzerRunner:
     def __init__(self, timeout_sec=10, max_input_size=4096):
@@ -20,14 +23,14 @@ class FuzzerRunner:
             "-close_fd_mask=3"
         ]
 
-        print("Launching libFuzzer run:", " ".join(cmd))
+        LOGGER.info("Launching libFuzzer run: %s", " ".join(cmd))
         env = os.environ.copy()
         try:
             subprocess.run(cmd, timeout=self.timeout_sec + 5, check=True, env=env)
             return True
         except subprocess.TimeoutExpired:
-            print(f"Fuzzing timeout for {binary_path}")
+            LOGGER.warning("Fuzzing timeout for %s", binary_path)
             return False
-        except subprocess.CalledProcessError as e:
-            print(f"Fuzzing crash detected for {binary_path}")
+        except subprocess.CalledProcessError:
+            LOGGER.warning("Fuzzing crash detected for %s", binary_path)
             return False

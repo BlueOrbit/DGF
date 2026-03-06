@@ -1,18 +1,35 @@
 import os
+import subprocess
+from types import SimpleNamespace
+
 from dgf_validator.validator import Validator
-from dgf_validator.runner import Runner
 
-# 初始化模块
-validator = Validator(clang_path="clang-14")
-runner = Runner()
 
-# LLM 生成输出目录
-fuzz_output_dir = "../data/fuzz_output_test"
-include_dirs = ["../testdata/cJSON", "/usr/include", "/usr/local/include"]
+def test_validate_source_uses_include_and_lib_flags(monkeypatch, tmp_path):
+    src_file = tmp_path / "driver.c"
+    src_file.write_text("int LLVMFuzzerTestOneInput(const unsigned char*d, unsigned long s){return 0;}")
 
-for filename in os.listdir(fuzz_output_dir):
-    if filename.endswith(".c"):
-        src_file = os.path.join(fuzz_output_dir, filename)
-        success, binary = validator.validate_source(src_file, include_dirs=include_dirs)
-        if success:
-            runner.run_binary(binary)
+    captured = {}
+
+    def fake_run(cmd, check, stdout, stderr, text):
+        captured["cmd"] = cmd
+        return SimpleNamespace(returncode=0, stdout="", stderr="")
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+
+    validator = Validator(
+        clang_path="clang",
+        work_dir=str(tmp_path / "validated"),
+        lib_dir="/tmp/libs",
+        libs=["cjson", "-lfoo"],
+    )
+    success, binary = validator.validate_source(str(src_file), include_dirs=["/tmp/include"])
+
+    assert success is True
+    assert os.path.basename(binary) == "driver"
+    assert "-I" in captured["cmd"]
+    assert "/tmp/include" in captured["cmd"]
+    assert "-L/tmp/libs" in captured["cmd"]
+    assert "-Wl,-rpath,/tmp/libs" in captured["cmd"]
+    assert "-lcjson" in captured["cmd"]
+    assert "-lfoo" in captured["cmd"]
