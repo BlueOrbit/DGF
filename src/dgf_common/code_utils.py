@@ -1,6 +1,7 @@
 import re
 
-_FENCED_CODE_PATTERN = re.compile(r"```(?:c|C|cpp|c\+\+)?\s*(.*?)```", re.DOTALL)
+_FENCED_C_CPP_PATTERN = re.compile(r"```(?:c|C|cpp|c\+\+)\s*(.*?)```", re.DOTALL)
+_FENCED_UNTAGGED_PATTERN = re.compile(r"```[ \t]*\n(.*?)```", re.DOTALL)
 
 
 def extract_c_code_block(raw_text):
@@ -11,7 +12,12 @@ def extract_c_code_block(raw_text):
     if raw_text is None:
         return ""
 
-    match = _FENCED_CODE_PATTERN.search(raw_text)
+    match = _FENCED_C_CPP_PATTERN.search(raw_text)
+    if match:
+        return match.group(1).strip()
+
+    # Backward-compatible fallback for unlabeled fenced blocks.
+    match = _FENCED_UNTAGGED_PATTERN.search(raw_text)
     if match:
         return match.group(1).strip()
     return raw_text.strip()

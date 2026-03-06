@@ -10,7 +10,7 @@ class ConstraintInferencer:
         for file_entry in self.api_data:
             for func in file_entry["result"]["functions"]:
                 func_name = func["name"]
-                constraints[func_name] = []
+                constraints.setdefault(func_name, [])
 
                 for param in func["parameters"]:
                     pname = param["name"].lower()

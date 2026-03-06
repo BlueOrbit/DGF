@@ -69,6 +69,9 @@ class Validator:
                     continue
                 else:
                     return False, None
+            except OSError as e:
+                LOGGER.warning("Failed to execute compiler %s: %s", self.clang, e)
+                return False, None
 
         return False, None
 

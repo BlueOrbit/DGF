@@ -1,3 +1,4 @@
+import dgf_feedback.prompt_mutator as prompt_mutator_module
 from dgf_feedback.api_manager import APIManager
 from dgf_feedback.prompt_mutator import PromptMutator
 from dgf_feedback.sample_filter import SampleFilter
@@ -39,3 +40,28 @@ def test_prompt_mutator_insert_replace_crossover():
 
     crossed = mutator.crossover(["A", "B"], ["B", "C"])
     assert set(crossed) == {"A", "B", "C"}
+
+
+def test_prompt_mutator_without_parents_does_not_offer_crossover(monkeypatch):
+    manager = APIManager(["A", "B", "C"])
+    mutator = PromptMutator(manager)
+    seen_modes = []
+
+    def fake_choice(options):
+        seen_modes.extend(options)
+        return "insert"
+
+    monkeypatch.setattr(prompt_mutator_module.random, "choice", fake_choice)
+    mutated = mutator.mutate(["A"], parents=None)
+
+    assert "crossover" not in seen_modes
+    assert "A" in mutated
+
+
+def test_prompt_mutator_crossover_with_parent(monkeypatch):
+    manager = APIManager(["A", "B", "C"])
+    mutator = PromptMutator(manager)
+
+    monkeypatch.setattr(prompt_mutator_module.random, "choice", lambda options: "crossover")
+    mutated = mutator.mutate(["A"], parents=["B", "C"])
+    assert set(mutated) == {"A", "B", "C"}

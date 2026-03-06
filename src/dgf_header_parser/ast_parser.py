@@ -18,9 +18,16 @@ class ASTParser:
         tu = index.parse(header_file, args=args)
         return tu
 
-    def extract(self, tu):
+    def extract(self, tu, source_file=None):
         functions, structs, typedefs, enums = [], [], [], []
+        target_file = os.path.realpath(source_file or tu.spelling)
         for node in tu.cursor.get_children():
+            location_file = getattr(getattr(node, "location", None), "file", None)
+            location_name = getattr(location_file, "name", None)
+            if not location_name:
+                continue
+            if os.path.realpath(location_name) != target_file:
+                continue
             kind = node.kind
             if kind == cindex.CursorKind.FUNCTION_DECL:
                 functions.append(self.extract_function(node))

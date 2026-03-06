@@ -31,6 +31,9 @@ class BranchCoverageCollector:
         except subprocess.CalledProcessError as exc:
             LOGGER.warning("Failed to merge profile data: %s", exc.stderr)
             return {}, 0.0
+        except OSError as exc:
+            LOGGER.warning("Failed to execute profile merge command %s: %s", self.profdata, exc)
+            return {}, 0.0
 
         export_cmd = [
             self.cov, "export",
@@ -49,6 +52,9 @@ class BranchCoverageCollector:
             output = json.loads(result.stdout)
         except subprocess.CalledProcessError as exc:
             LOGGER.warning("Failed to export coverage json: %s", exc.stderr)
+            return {}, 0.0
+        except OSError as exc:
+            LOGGER.warning("Failed to execute coverage export command %s: %s", self.cov, exc)
             return {}, 0.0
         except json.JSONDecodeError:
             LOGGER.warning("Invalid coverage JSON output from llvm-cov")

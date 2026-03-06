@@ -9,13 +9,16 @@ class PromptTemplate:
         with open(api_info_json, "r") as f:
             self.api_data = json.load(f)
 
-        self.system_includes = system_includes or [
-            "stdint.h",
-            "stddef.h",
-            "stdio.h",
-            "stdlib.h",
-            "string.h",
-        ]
+        if system_includes is None:
+            self.system_includes = [
+                "stdint.h",
+                "stddef.h",
+                "stdio.h",
+                "stdlib.h",
+                "string.h",
+            ]
+        else:
+            self.system_includes = system_includes
         self.api_prefixes = api_prefixes or []
 
         # 约束推导初始化
@@ -59,16 +62,27 @@ Always include:
 
 Please implement the LLVMFuzzerTestOneInput function that uses these APIs.
 
-void LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {{
+int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {{
     // Your implementation here
+    return 0;
 }}"""
         return prompt
 
     def get_api_signatures(self, num_funcs=5):
         functions = []
         for file_entry in self.api_data:
-            functions.extend(file_entry["result"]["functions"])
-        selected_funcs = random.sample(functions, min(num_funcs, len(functions)))
+            for func in file_entry["result"]["functions"]:
+                name = func["name"]
+                if not self.api_prefixes or any(name.startswith(prefix) for prefix in self.api_prefixes):
+                    functions.append(func)
+        if not functions:
+            return []
+        try:
+            safe_num_funcs = int(num_funcs)
+        except (TypeError, ValueError):
+            safe_num_funcs = 0
+        safe_num_funcs = max(0, safe_num_funcs)
+        selected_funcs = random.sample(functions, min(safe_num_funcs, len(functions)))
         return selected_funcs
 
     def format_func_signature(self, func):

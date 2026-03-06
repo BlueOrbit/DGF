@@ -1,0 +1,4 @@
+{
+  "install": "bash .cursor/scripts/install-python-dev-tools.sh",
+  "start": "bash .cursor/scripts/startup-path.sh"
+}

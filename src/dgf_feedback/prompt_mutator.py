@@ -32,12 +32,15 @@ class PromptMutator:
         return merged
 
     def mutate(self, current_apis, parents=None):
-        mode = random.choice(["insert", "replace", "crossover"])
+        modes = ["insert", "replace"]
+        if parents:
+            modes.append("crossover")
+        mode = random.choice(modes)
         if mode == "insert":
             return self.insert(current_apis)
         elif mode == "replace":
             return self.replace(current_apis)
-        elif mode == "crossover" and parents is not None:
+        elif mode == "crossover":
             return self.crossover(current_apis, parents)
         else:
             return current_apis  # 保底返回
