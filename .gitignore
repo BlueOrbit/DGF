@@ -30,7 +30,9 @@ build/
 # Test results
 *.cover
 coverage.xml
-*.pytest_cache/
+.pytest_cache/
+.ruff_cache/
+.coverage
 
 # Jupyter Notebook
 .ipynb_checkpoints

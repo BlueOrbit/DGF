@@ -1,15 +1,22 @@
 import json
 import random
+
 from dgf_header_parser.constraint_inferencer import ConstraintInferencer
 
+
 class PromptTemplate:
-    def __init__(self, api_info_json):
-        # 加载API信息
-        self.api_data = json.load(open(api_info_json))
-        self.system_includes = [
-            "stdint.h", "stddef.h", "stdio.h",
-            "stdlib.h", "string.h", "cJSON.h", "cJSON_Utils.h"
+    def __init__(self, api_info_json, system_includes=None, api_prefixes=None):
+        with open(api_info_json, "r") as f:
+            self.api_data = json.load(f)
+
+        self.system_includes = system_includes or [
+            "stdint.h",
+            "stddef.h",
+            "stdio.h",
+            "stdlib.h",
+            "string.h",
         ]
+        self.api_prefixes = api_prefixes or []
 
         # 约束推导初始化
         inferencer = ConstraintInferencer(self.api_data)
@@ -18,11 +25,11 @@ class PromptTemplate:
     def get_all_api_names(self):
         functions = []
         for file_entry in self.api_data:
-            for f in file_entry["result"]["functions"]:
-                # 只保留库函数（如函数名前缀筛选）
-                if f["name"].startswith("cJSON"):  
-                    functions.append(f["name"])
-        return functions
+            for func in file_entry["result"]["functions"]:
+                name = func["name"]
+                if not self.api_prefixes or any(name.startswith(prefix) for prefix in self.api_prefixes):
+                    functions.append(name)
+        return sorted(set(functions))
 
 
     def generate_prompt(self, num_funcs=5):

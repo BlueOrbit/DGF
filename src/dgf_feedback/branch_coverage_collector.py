@@ -1,8 +1,11 @@
 # src/dgf_feedback/branch_coverage_collector.py
 
-import subprocess
-import os
 import json
+import logging
+import os
+import subprocess
+
+LOGGER = logging.getLogger(__name__)
 
 class BranchCoverageCollector:
     def __init__(self, profdata_path="llvm-profdata", cov_path="llvm-cov"):
@@ -14,10 +17,20 @@ class BranchCoverageCollector:
         profdata_out = os.path.join(work_dir, "default.profdata")
 
         if not os.path.exists(profraw):
-            print(f"Warning: Coverage profile file not found. Likely crash occurred.")
+            LOGGER.warning("Coverage profile file not found at %s", profraw)
             return {}, 0.0
 
-        subprocess.run([self.profdata, "merge", "-sparse", profraw, "-o", profdata_out], check=True)
+        try:
+            subprocess.run(
+                [self.profdata, "merge", "-sparse", profraw, "-o", profdata_out],
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+        except subprocess.CalledProcessError as exc:
+            LOGGER.warning("Failed to merge profile data: %s", exc.stderr)
+            return {}, 0.0
 
         export_cmd = [
             self.cov, "export",
@@ -25,8 +38,21 @@ class BranchCoverageCollector:
             binary_path,
             "--format=json"
         ]
-        result = subprocess.run(export_cmd, stdout=subprocess.PIPE, check=True)
-        output = json.loads(result.stdout.decode())
+        try:
+            result = subprocess.run(
+                export_cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=True,
+                text=True,
+            )
+            output = json.loads(result.stdout)
+        except subprocess.CalledProcessError as exc:
+            LOGGER.warning("Failed to export coverage json: %s", exc.stderr)
+            return {}, 0.0
+        except json.JSONDecodeError:
+            LOGGER.warning("Invalid coverage JSON output from llvm-cov")
+            return {}, 0.0
 
         func_coverage = {}
 

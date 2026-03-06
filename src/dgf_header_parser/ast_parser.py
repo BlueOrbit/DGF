@@ -1,18 +1,16 @@
-# import libclang
-# from libclang import cindex
-import json
 import os
 
-import clang.cindex as cindex 
+import clang.cindex as cindex
 
-# 配置 libclang 路径
-cindex.Config.set_library_file("/usr/lib/llvm-14/lib/libclang.so.1")
+_LIBCLANG_PATH = os.getenv("LIBCLANG_PATH")
+if _LIBCLANG_PATH and not cindex.Config.loaded:
+    cindex.Config.set_library_file(_LIBCLANG_PATH)
 
 
 
 class ASTParser:
-    def __init__(self, include_dirs=[]):
-        self.include_dirs = include_dirs
+    def __init__(self, include_dirs=None):
+        self.include_dirs = include_dirs or []
 
     def parse(self, header_file):
         index = cindex.Index.create()

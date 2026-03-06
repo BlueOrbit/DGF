@@ -1,12 +1,19 @@
+import os
 import re
 
+
 class CallChainAnalyzer:
-    def __init__(self):
-        self.input_file = '/home/lanjiachen/DGF/src/data/reverse_callgraph.txt'
+    def __init__(self, input_file=None):
+        self.input_file = input_file or os.getenv(
+            "DGF_REVERSE_CALLGRAPH_PATH",
+            "data/reverse_callgraph.txt",
+        )
         self.lines = self._read_and_clean_lines()
 
     def _read_and_clean_lines(self):
         lines = []
+        if not os.path.exists(self.input_file):
+            return lines
         with open(self.input_file, 'r') as f:
             for line in f:
                 i = 0
