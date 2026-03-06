@@ -59,15 +59,19 @@ Always include:
 
 Please implement the LLVMFuzzerTestOneInput function that uses these APIs.
 
-void LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {{
+int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {{
     // Your implementation here
+    return 0;
 }}"""
         return prompt
 
     def get_api_signatures(self, num_funcs=5):
         functions = []
         for file_entry in self.api_data:
-            functions.extend(file_entry["result"]["functions"])
+            for func in file_entry["result"]["functions"]:
+                name = func["name"]
+                if not self.api_prefixes or any(name.startswith(prefix) for prefix in self.api_prefixes):
+                    functions.append(func)
         selected_funcs = random.sample(functions, min(num_funcs, len(functions)))
         return selected_funcs
 

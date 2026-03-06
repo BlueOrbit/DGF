@@ -1,6 +1,7 @@
 import logging
 import os
 import re
+import shutil
 import subprocess
 
 LOGGER = logging.getLogger(__name__)
@@ -16,6 +17,7 @@ class Validator:
     ):
         self.clang = clang_path
         self.work_dir = work_dir
+        self.lib_dir = lib_dir
         os.makedirs(work_dir, exist_ok=True)
 
         libs = libs or []
@@ -34,6 +36,12 @@ class Validator:
 
     def validate_source(self, src_file, include_dirs=None, max_retry=3):
         include_dirs = include_dirs or []
+        if shutil.which(self.clang) is None:
+            LOGGER.error("Compiler not found on PATH: %s", self.clang)
+            return False, None
+        if self.lib_dir and (not os.path.isdir(self.lib_dir)):
+            LOGGER.warning("Library directory does not exist: %s", self.lib_dir)
+
         output_binary = os.path.join(self.work_dir, os.path.basename(src_file).replace(".c", ""))
 
         for attempt in range(max_retry):
@@ -69,6 +77,9 @@ class Validator:
                     continue
                 else:
                     return False, None
+            except (FileNotFoundError, OSError) as exc:
+                LOGGER.error("Failed to execute compiler command: %s", exc)
+                return False, None
 
         return False, None
 

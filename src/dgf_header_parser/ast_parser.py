@@ -18,9 +18,12 @@ class ASTParser:
         tu = index.parse(header_file, args=args)
         return tu
 
-    def extract(self, tu):
+    def extract(self, tu, target_header=None):
         functions, structs, typedefs, enums = [], [], [], []
+        target_header_path = os.path.abspath(target_header) if target_header else None
         for node in tu.cursor.get_children():
+            if target_header_path and not _is_node_from_target_header(node, target_header_path):
+                continue
             kind = node.kind
             if kind == cindex.CursorKind.FUNCTION_DECL:
                 functions.append(self.extract_function(node))
@@ -81,3 +84,14 @@ class ASTParser:
             "name": node.spelling,
             "constants": constants
         }
+
+
+def _is_node_from_target_header(node, target_header_path):
+    location_file = getattr(getattr(node, "location", None), "file", None)
+    if location_file is None:
+        return False
+    try:
+        node_file_path = os.path.abspath(str(location_file))
+    except Exception:
+        return False
+    return node_file_path == target_header_path

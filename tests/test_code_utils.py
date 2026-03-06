@@ -9,3 +9,8 @@ def test_extract_c_code_block_from_fenced_markdown():
 def test_extract_c_code_block_fallback_to_raw_text():
     raw = "int y = 2;"
     assert extract_c_code_block(raw) == "int y = 2;"
+
+
+def test_extract_c_code_block_prefers_c_fence_over_other_fences():
+    raw = "```text\nnot c\n```\n```c\nint z = 3;\n```"
+    assert extract_c_code_block(raw) == "int z = 3;"

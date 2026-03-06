@@ -29,8 +29,8 @@ class FeedbackController:
         self.include_dirs = include_dirs or []
         self.prompt_template = PromptTemplate(
             api_json,
-            system_includes=system_includes or [],
-            api_prefixes=api_prefixes or [],
+            system_includes=system_includes,
+            api_prefixes=api_prefixes,
         )
         self.llm = LLMCaller()
         self.validator = Validator(
@@ -96,7 +96,11 @@ class FeedbackController:
 
 
             # 使用 API级别 SampleFilter
-            if not self.sample_filter.filter_sample(mutated_apis, func_cov_result):
+            if not self.sample_filter.filter_sample(
+                mutated_apis,
+                func_cov_result,
+                overall_coverage=overall_coverage,
+            ):
                 LOGGER.info("Sample %s filtered by coverage rule", src_path)
                 continue
 

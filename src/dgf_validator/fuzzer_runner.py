@@ -34,3 +34,6 @@ class FuzzerRunner:
         except subprocess.CalledProcessError:
             LOGGER.warning("Fuzzing crash detected for %s", binary_path)
             return False
+        except (FileNotFoundError, OSError) as exc:
+            LOGGER.error("Failed to run fuzzing binary %s: %s", binary_path, exc)
+            return False

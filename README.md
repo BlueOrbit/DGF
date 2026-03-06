@@ -61,6 +61,21 @@ testdata/cJSON
 
 并确保其可被 clang include/link（`src/config/experiment.yaml` 已给出默认路径模板）。
 
+示例构建步骤：
+
+```bash
+cd testdata/cJSON
+cmake -S . -B build
+cmake --build build -j
+cd ../..
+```
+
+建议先确认目标库产物存在，再运行主流程：
+
+```bash
+ls testdata/cJSON/build | head
+```
+
 ## 6. 运行方式
 
 ### 6.1 运行完整流程
@@ -79,7 +94,10 @@ PYTHONPATH=src python src/dgf_pipeline/run_pipeline.py \
   --clang_path clang \
   --include_dirs testdata/cJSON \
   --lib_dir testdata/cJSON/build \
-  --libs cjson cjson_utils
+  --libs cjson cjson_utils \
+  --system_includes stdint.h stddef.h stdio.h stdlib.h string.h cJSON.h cJSON_Utils.h \
+  --api_prefixes cJSON \
+  --fuzz_timeout_sec 20
 ```
 
 ## 7. 配置说明

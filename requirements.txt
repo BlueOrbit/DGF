@@ -1,4 +1,4 @@
-openai
-tqdm
-PyYAML
-clang
+openai==2.26.0
+tqdm==4.67.3
+PyYAML==6.0.1
+clang==21.1.7

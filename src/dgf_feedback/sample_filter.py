@@ -1,26 +1,37 @@
 # src/dgf_feedback/sample_filter.py
 
 class SampleFilter:
-    def __init__(self, min_api_coverage=0.2, min_success_ratio=0.5):
+    def __init__(self, min_api_coverage=0.2, min_success_ratio=0.5, min_overall_coverage=0.01):
         """
         min_api_coverage: 单API最低覆盖率 (0~1)
         min_success_ratio: 组合中有多少API达到有效覆盖
+        min_overall_coverage: 当 API 级覆盖不可用时的最低整体覆盖率
         """
         self.min_api_coverage = min_api_coverage
         self.min_success_ratio = min_success_ratio
+        self.min_overall_coverage = min_overall_coverage
 
-    def filter_sample(self, mutated_apis, func_coverage_result):
+    def filter_sample(self, mutated_apis, func_coverage_result, overall_coverage=None):
+        if not mutated_apis:
+            return False
+
         valid = 0
         total = len(mutated_apis)
+        seen_api_coverage = False
 
         for api in mutated_apis:
-            coverage = func_coverage_result.get(api, 0.0)
+            coverage = func_coverage_result.get(api)
+            if coverage is None:
+                continue
+            seen_api_coverage = True
             if coverage >= self.min_api_coverage:
                 valid += 1
 
+        if not seen_api_coverage:
+            if overall_coverage is None:
+                return False
+            return overall_coverage >= self.min_overall_coverage
+
         success_ratio = valid / total if total > 0 else 0
 
-        if success_ratio >= self.min_success_ratio:
-            return True
-        else:
-            return False
+        return success_ratio >= self.min_success_ratio

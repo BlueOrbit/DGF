@@ -1,6 +1,7 @@
 import argparse
 import json
 import logging
+import os
 
 from tqdm import tqdm
 
@@ -17,7 +18,7 @@ def extract_all_api(header_dir, include_dirs):
     for h in tqdm(headers, desc="Parsing Headers"):
         try:
             tu = parser.parse(h)
-            result = parser.extract(tu)
+            result = parser.extract(tu, target_header=h)
             all_results.append({
                 "file": h,
                 "result": result
@@ -37,6 +38,8 @@ if __name__ == "__main__":
 
     results = extract_all_api(args.header_dir, args.include_dirs)
 
+    output_parent = os.path.dirname(args.output) or "."
+    os.makedirs(output_parent, exist_ok=True)
     with open(args.output, "w") as f:
         json.dump(results, f, indent=2)
 

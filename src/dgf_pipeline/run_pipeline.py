@@ -16,6 +16,9 @@ if __name__ == "__main__":
     parser.add_argument("--include_dirs", nargs="*", default=[])
     parser.add_argument("--lib_dir", type=str, default=None)
     parser.add_argument("--libs", nargs="*", default=[])
+    parser.add_argument("--system_includes", nargs="*", default=None)
+    parser.add_argument("--api_prefixes", nargs="*", default=None)
+    parser.add_argument("--fuzz_timeout_sec", type=int, default=20)
     args = parser.parse_args()
 
     # 直接调用
@@ -26,5 +29,8 @@ if __name__ == "__main__":
         include_dirs=args.include_dirs,
         lib_dir=args.lib_dir,
         libs=args.libs,
+        system_includes=args.system_includes,
+        api_prefixes=args.api_prefixes,
+        fuzz_timeout_sec=args.fuzz_timeout_sec,
     )
     fc.run_iteration(num_samples=args.samples)
