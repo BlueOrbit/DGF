@@ -35,3 +35,39 @@ def test_llm_caller_generate_code(monkeypatch):
     caller = LLMCaller(model="demo-model")
     text = caller.generate_code("hi")
     assert "int a=0;" in text
+
+
+def test_llm_caller_invalid_temperature_falls_back(monkeypatch):
+    class FakeClient:
+        def __init__(self, api_key=None, base_url=None):
+            self.api_key = api_key
+            self.base_url = base_url
+            self.chat = SimpleNamespace(completions=SimpleNamespace(create=lambda **kwargs: None))
+
+    monkeypatch.setenv("OPENAI_API_KEY", "dummy")
+    monkeypatch.setenv("OPENAI_TEMPERATURE", "not-a-number")
+    monkeypatch.setattr(llm_caller.openai, "OpenAI", FakeClient)
+
+    caller = LLMCaller(model="demo-model")
+    assert caller.temperature == 0.2
+
+
+def test_llm_caller_generate_code_raises_on_empty_choices(monkeypatch):
+    class FakeCompletions:
+        @staticmethod
+        def create(**kwargs):
+            _ = kwargs
+            return SimpleNamespace(choices=[])
+
+    class FakeClient:
+        def __init__(self, api_key=None, base_url=None):
+            self.api_key = api_key
+            self.base_url = base_url
+            self.chat = SimpleNamespace(completions=FakeCompletions())
+
+    monkeypatch.setenv("OPENAI_API_KEY", "dummy")
+    monkeypatch.setattr(llm_caller.openai, "OpenAI", FakeClient)
+
+    caller = LLMCaller(model="demo-model")
+    with pytest.raises(ValueError, match="no choices"):
+        caller.generate_code("hi")

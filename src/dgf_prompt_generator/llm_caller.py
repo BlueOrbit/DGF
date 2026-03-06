@@ -39,7 +39,11 @@ class LLMCaller:
             final_temperature = os.getenv("OPENAI_TEMPERATURE", "0.2")
         if local_config is not None and temperature is None:
             final_temperature = getattr(local_config, "TEMPERATURE", final_temperature)
-        final_temperature = float(final_temperature)
+        try:
+            final_temperature = float(final_temperature)
+        except (TypeError, ValueError):
+            LOGGER.warning("Invalid OPENAI_TEMPERATURE=%r, fallback to 0.2", final_temperature)
+            final_temperature = 0.2
 
         self.client = openai.OpenAI(
             api_key=final_api_key,
@@ -58,4 +62,11 @@ class LLMCaller:
             temperature=self.temperature
         )
         LOGGER.debug("LLM generation finished using model=%s", self.model)
-        return response.choices[0].message.content
+        choices = getattr(response, "choices", None)
+        if not choices:
+            raise ValueError("LLM response has no choices.")
+        message = getattr(choices[0], "message", None)
+        content = getattr(message, "content", None)
+        if not isinstance(content, str) or not content.strip():
+            raise ValueError("LLM response has empty content.")
+        return content

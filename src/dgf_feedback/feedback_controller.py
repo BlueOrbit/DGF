@@ -57,7 +57,8 @@ class FeedbackController:
         for i in range(num_samples):
             # === 动态选取 APIs ===
             candidate_apis = self.api_manager.sample_api_combination(base_num_funcs)
-            mutated_apis = self.mutator.mutate(candidate_apis)
+            parent_apis = history_api_combos[-1] if history_api_combos else None
+            mutated_apis = self.mutator.mutate(candidate_apis, parents=parent_apis)
             history_api_combos.append(mutated_apis)
 
             # 记录 prompt 使用次数
